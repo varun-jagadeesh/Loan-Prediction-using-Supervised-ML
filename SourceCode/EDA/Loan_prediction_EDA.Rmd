@@ -1,0 +1,74 @@
+---
+title: "EDA"
+author: "Derrie Susan , 
+         Varun Jagadeesh , 
+          Sai Naga Chandra Vivek Garimella"
+date: "November 7, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+  
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+dataset<-read.csv("C:/Users/garim/OneDrive/Desktop/NEU/Supervised Machine Learning/Project/sample_load_data.csv")
+dataset <- dataset %>% filter(action_taken != 4 & action_taken != 6 & action_taken !=5 & action_taken!=8)
+
+
+dataset$action_taken[dataset$action_taken < 3] <- 1
+
+dataset$action_taken[dataset$action_taken == 3 ] <- 0
+dataset$action_taken[dataset$action_taken == 7 ] <- 0
+
+dataset <- dataset %>% filter(derived_dwelling_category != 'S')
+dataset <- dataset %>% filter(loan_purpose != '5')
+dataset <- dataset %>% filter(applicant_age != c('8888') & applicant_age != '9999')
+
+
+
+
+
+
+
+#Loan PURPOSE
+one<- dataset %>% group_by(loan_purpose,action_taken) %>% summarise(total = n())
+two<-dataset %>% group_by(loan_purpose) %>% summarise(total2 = n())
+left_join(one,two) %>% mutate(prop = total/total2) %>% ggplot(mapping = aes(x=as.character(loan_purpose),y=prop,fill=as.character(action_taken)))+geom_bar(stat = 'identity')+scale_x_discrete(breaks=c("1","2","31","32","4","5"),labels=c("Home purchase", "Home improvement", "Refinancing","Cash-out refinancing","Other purpose","Not applicable"))+coord_flip()+scale_fill_discrete(name="Loan Status", breaks=c("1","0"),labels=c("approved", "rejected"))+labs(title = "Action taken vs Loan purpose",x='Loan purpose',y='Proportion')
+
+consider_two<-dataset  %>% filter(debt_to_income_ratio != c("NA") & debt_to_income_ratio != "Exempt")%>% group_by(debt_to_income_ratio,action_taken) %>% summarise(both = n())
+consider_one<-dataset %>% filter(debt_to_income_ratio != c("NA") & debt_to_income_ratio != "Exempt")%>% group_by(debt_to_income_ratio) %>% summarise(single = n())
+
+#income to debt ratio
+left_join(consider_two,consider_one) %>% filter(debt_to_income_ratio != "" ) %>% mutate(ratio = both/single) %>% ggplot(mapping = aes(x=debt_to_income_ratio,y=ratio,fill=as.character(action_taken)))+geom_bar(stat = 'identity')+coord_flip()+ scale_x_discrete(breaks=c("<20%",">60%","20%-<30%","30%-<36%","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50%-60%"),labels=c("<20%",">60%","20%-<30%", "30%-<36%" ,"36%","37%","38%","39%","40%","41%","42%","43%","44%","45%","46%","47%","48%","49%","50%-60%"))+scale_fill_discrete(name="Loan Status", breaks=c("1","0"),labels=c("approved", "rejected"))+labs(title = "Income to debt Ratio vs Action Taken",x='Income to Debt Ratio',y='Proportion')
+ 
+# AGE vs Action taken
+
+age2<-dataset %>% group_by(applicant_age,action_taken) %>% summarise(total_all = n())
+ag1<-dataset %>% group_by(applicant_age) %>% summarise(total_one = n())
+
+left_join(age2,ag1) %>% mutate(proportion=total_all/total_one) %>% ggplot(mapping = aes(x=applicant_age,y=proportion,fill=as.factor(action_taken)))+geom_bar(stat = 'identity')+scale_fill_discrete(name="Loan Status", breaks=c("1","0"),labels=c("approved", "rejected"))+labs(title = "Age of Applicant vs Action Taken",x='age of Applicant',y='Proportion')
+
+dataset %>% filter(denial_reason_1 != 10) %>% ggplot(mapping = aes(x=as.character(denial_reason_1)))+geom_bar()+ scale_x_discrete(breaks=c("1","2","3","4","5","6","7","8","9","1111"),labels=c("Debt-to-income ratio", "Employment history", "Credit history","Collateral","Insufficient cash (downpayment, closing costs)","Unverifiable information","Credit application incomplete","Mortgage insurance denied","Other","Exempt"))+coord_flip()+labs(title = "Denial Reasons vs Number of Applications",x='Denial Reasons',y='Number of Applications')
+
+
+
+aus1<-dataset %>% filter(aus_1 != 1111) %>% group_by(aus_1) %>% summarise(op= n())
+aus11<- dataset %>% filter(aus_1 != 1111) %>% group_by(aus_1,action_taken) %>% summarise(po= n())
+left_join(aus1,aus11) %>% mutate(counts = po/op) %>% ggplot(mapping = aes(x=as.character(aus_1),y=counts,fill=as.character(action_taken)))+geom_bar(stat='identity')+scale_x_discrete(breaks=c("1","2","3","4","5","6"),labels = c("Desktop Underwriter (DU)","Loan Prospector (LP) or Loan Product Advisor","Technology Open to Approved Lenders (TOTAL) Scorecard","Guaranteed Underwriting System (GUS)"," Other","Not applicable"))+coord_flip()+scale_fill_discrete(name='loan status',breaks = c("1","0"),labels=c("approved","rejected"))+labs(title = "Automated Underwriting System vs Action taken",x="types of automated underwriting system" , y='proportion')
+
+acs<-dataset %>% filter(applicant_credit_score_type != '1111') %>% group_by(applicant_credit_score_type) %>% summarise(jh = n()) 
+
+acs2<-dataset %>% filter(applicant_credit_score_type != '1111') %>% group_by(applicant_credit_score_type,action_taken) %>% summarise(jh2 = n()) 
+left_join(acs,acs2) %>% mutate(prp = jh2/jh) %>% ggplot(mapping = aes(x=as.character(applicant_credit_score_type),y=prp,fill=as.character(action_taken)))+geom_bar(stat='identity') + scale_x_discrete(breaks = c("1","2","3","4","5","6","7","8","9"),labels=c("Equifax Beacon 5.0","Experian Fair Isaac","FICO Risk Score Classic 04","FICO Risk Score Classic 98","VantageScore 2.0"," VantageScore 3.0","More than one credit scoring model","Other credit scoring model","Not applicable"))+coord_flip()+scale_fill_discrete(name='action taken',breaks=c("1","0"),labels=c("approved","rejected"))+labs(title = 'Applicant credit score type vs Action taken',x='Applicant credit score type',y='proportion')
+
+```
+
+
+
+
+
