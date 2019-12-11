@@ -1,0 +1,55 @@
+---
+title: "lp"
+author: "Varun"
+date: "11/9/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(ggplot2)
+library(readr)
+library(dplyr)
+read_df <- read_csv("2018_public_sample.csv")
+```
+
+```{r}
+read_df %>% 
+g <- ggplot(read_df, aes(state_code,fill=state_code))+coord_flip()
+g+geom_bar()
+```
+
+```{r}
+read_df %>%
+  group_by(state_code) %>%
+  summarise(Count = n()) %>%
+  arrange(desc(Count)) %>%
+  ungroup() %>%
+  mutate(Name = reorder(state_code,Count)) %>%
+  head(10) %>%
+  
+  
+  ggplot(aes(x = state_code,y = Count)) +
+  geom_bar(stat='identity',colour="red",fill = "blue") +
+  geom_text(aes(x = state_code, y = 1, label = paste0("(",Count,")",sep="")),
+            hjust=0, vjust=.5, size = 4, colour = 'black',
+            fontface = 'bold') +
+  labs(x = 'State', y = 'Count', 
+       title = 'Top 10 Staes') +
+  coord_flip() + 
+  theme_bw()
+
+```
+```{r}
+
+```
+
